@@ -25,6 +25,20 @@ namespace Ardo.ArdoJSON
             string? Path="");
 
         /// <summary>
+        /// Action to find differences between lists of JSON objects 
+        /// </summary>
+        [OSAction(Description = "Action to find differences between lists of JSON objects", IconResourceName = "ArdoJSON.resources.logo.png", ReturnName = "Result")]
+        public string DiffJsonLists(
+            [OSParameter(Description = "The Left JSON to be used")]
+            string leftJsonIn, 
+            [OSParameter(Description = "The Right JSON to be used")]
+            string rightJsonIn,
+            [OSParameter(Description = "The object key, in general is Id")]
+            string keyFieldIn);
+
+
+        
+        /// <summary>
         /// Attempts to parse an IBAN, returning a boolean success indicator and a
         /// new Iban structure. This method is exposed as a server action to your
         /// ODC apps and libraries.
@@ -51,4 +65,5 @@ namespace Ardo.ArdoJSON
             [OSParameter(DataType = OSDataType.Boolean, Description = "If true, when the JSON path returns a single element, force the content to return as JSON ( enclosed in double quotes). If false, return the value without the enclosing quotes. Defaults to false")]
             bool? AlwaysReturnAsJSON =false);
     }
+
 }

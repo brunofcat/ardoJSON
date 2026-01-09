@@ -1,6 +1,8 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Text;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Ardo.ArdoJSON
 {
@@ -49,6 +51,73 @@ namespace Ardo.ArdoJSON
 
             return sb.ToString(); ;
         }
+
+        public string DiffJsonLists(string leftJson, string rightJson, string keyField)
+        {
+            var diffs = new List<object>();
+        
+            var leftArray = JArray.Parse(leftJson);
+            var rightArray = JArray.Parse(rightJson);
+        
+            var leftMap = leftArray
+                .Where(x => x[keyField] != null)
+                .ToDictionary(x => x[keyField]!.ToString(), x => x);
+        
+            var rightMap = rightArray
+                .Where(x => x[keyField] != null)
+                .ToDictionary(x => x[keyField]!.ToString(), x => x);
+        
+            // Removed + Changed
+            foreach (var kv in leftMap)
+            {
+                if (!rightMap.ContainsKey(kv.Key))
+                {
+                    diffs.Add(new
+                    {
+                        Type = "Removed",
+                        Key = kv.Key,
+                        OldValue = kv.Value
+                    });
+                    continue;
+                }
+        
+                var leftObj = kv.Value;
+                var rightObj = rightMap[kv.Key];
+        
+                foreach (var prop in leftObj.Properties())
+                {
+                    var rProp = rightObj[prop.Name];
+                    if (rProp == null || !JToken.DeepEquals(prop.Value, rProp))
+                    {
+                        diffs.Add(new
+                        {
+                            Type = "Changed",
+                            Key = kv.Key,
+                            Field = prop.Name,
+                            OldValue = prop.Value,
+                            NewValue = rProp
+                        });
+                    }
+                }
+            }
+        
+            // Added
+            foreach (var kv in rightMap)
+            {
+                if (!leftMap.ContainsKey(kv.Key))
+                {
+                    diffs.Add(new
+                    {
+                        Type = "Added",
+                        Key = kv.Key,
+                        NewValue = kv.Value
+                    });
+                }
+            }
+        
+            return JArray.FromObject(diffs).ToString();
+        }
+        
         public string JSONSelect(string JSONIn, string? Path = "", bool? AlwaysReturnAsJSON = false)
         {
             var o = JToken.Parse(JSONIn);
@@ -181,4 +250,5 @@ namespace Ardo.ArdoJSON
             }
         }
     }
+
 }
